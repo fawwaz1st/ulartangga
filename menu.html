@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ular Tangga - Menu Utama</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="menu-styles.css">
+    <link rel="stylesheet" href="loading.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="animated-bg">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+            <div class="shape shape-5"></div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Memuat Permainan...</div>
+            <div class="loading-subtext">Menyiapkan papan dan pemain</div>
+            <div class="loading-progress">
+                <div class="loading-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Transition -->
+    <div id="page-transition" class="page-transition"></div>
+
+    <div id="main-menu" class="screen active">
+        <div class="main-menu-container">
+            <div class="game-logo">
+                <div class="logo-icon">🎲</div>
+            </div>
+            
+            <h1 class="game-title">Ular Tangga</h1>
+            <p class="game-subtitle">Permainan Modern Menuju Kemenangan</p>
+            
+            <div class="menu-buttons">
+                <button class="menu-btn action-btn primary-btn" onclick="startGame()">
+                    <i class="fas fa-play btn-icon"></i>
+                    <span class="btn-text">Mulai Permainan</span>
+                    <div class="btn-glow"></div>
+                </button>
+                
+                <button class="menu-btn action-btn secondary-btn" onclick="showTutorial()">
+                    <i class="fas fa-book btn-icon"></i>
+                    <span class="btn-text">Tutorial</span>
+                </button>
+                
+                <button class="menu-btn action-btn secondary-btn" onclick="showSettings()">
+                    <i class="fas fa-cog btn-icon"></i>
+                    <span class="btn-text">Pengaturan</span>
+                </button>
+            </div>
+            
+            <div class="stats-dashboard">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Pemenang Terakhir</div>
+                        <div class="stat-value" id="last-winner">-</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Total Permainan</div>
+                        <div class="stat-value" id="total-games">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeTutorial()">&times;</button>
+            <h2>Cara Bermain Ular Tangga</h2>
+            
+            <div class="tutorial-section">
+                <h3>Tujuan Permainan</h3>
+                <p>Menjadi pemain pertama yang mencapai kotak nomor 100!</p>
+            </div>
+            
+            <div class="tutorial-section">
+                <h3>Cara Bermain</h3>
+                <ul>
+                    <li>Klik tombol "Lempar Dadu" untuk menggerakkan token</li>
+                    <li>Token akan bergerak sesuai angka yang muncul di dadu</li>
+                    <li>Jika mendarat di <span class="ladder-text">tangga</span>, naik ke atas</li>
+                    <li>Jika mendarat di <span class="snake-text">ular</span>, turun ke bawah</li>
+                    <li>Pemain pertama yang mencapai kotak 100 menang!</li>
+                </ul>
+            </div>
+            
+            <div class="tutorial-actions">
+                <button class="action-btn primary-btn" onclick="closeTutorial()">
+                    <i class="fas fa-check"></i>
+                    Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeSettings()">&times;</button>
+            <h2>Pengaturan Permainan</h2>
+            
+            <div class="settings-section">
+                <h3>Jumlah Pemain</h3>
+                <div class="player-selector">
+                    <button class="player-btn active" data-players="2">2 Pemain</button>
+                    <button class="player-btn" data-players="3">3 Pemain</button>
+                    <button class="player-btn" data-players="4">4 Pemain</button>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Mode Permainan</h3>
+                <div class="mode-selector">
+                    <button class="mode-btn active" data-mode="classic">Klasik</button>
+                    <button class="mode-btn" data-mode="speed">Cepat</button>
+                </div>
+            </div>
+            
+            <div class="settings-actions">
+                <button class="action-btn secondary-btn" onclick="closeSettings()">
+                    <i class="fas fa-times"></i>
+                    Batal
+                </button>
+                <button class="action-btn primary-btn" onclick="saveSettings()">
+                    <i class="fas fa-save"></i>
+                    Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="menu.js"></script>
+</body>
+</html>
