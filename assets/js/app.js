@@ -74,13 +74,13 @@
   };
 
   // Elemen DOM (sesuai index.html)
-  function startGame() {
-    // Redirect to game page
-    window.location.href = 'game.html';
+  function backToMenu() {
+    // Redirect to menu page
+    window.location.href = '../index.html';
   }
   
   // Ekspor agar bisa dipanggil via atribut onclick atau dari fungsi lain
-  window.startGame = startGame;
+  window.backToMenu = backToMenu;
 
   const mainMenuScreen = document.getElementById('main-menu');
   const gameScreen = document.getElementById('game-screen');
@@ -373,30 +373,30 @@
   function drawSnake(start, end) {
     const s = getCellCenter(start);
     const e = getCellCenter(end);
-    const dx = e.x - s.x, dy = e.y - s.y;
-    const dist = Math.sqrt(dx*dx + dy*dy);
+    const dx = e.x - s.x;
+    const dy = e.y - s.y;
     const midX = (s.x + e.x) / 2 + (Math.random() - 0.5) * 30;
     const midY = (s.y + e.y) / 2 + (Math.random() - 0.5) * 30;
-    
+
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', `M ${s.x} ${s.y} Q ${midX} ${midY} ${e.x} ${e.y}`);
     path.setAttribute('stroke', '#dc2626');
     path.setAttribute('stroke-width', '6');
     path.setAttribute('fill', 'none');
     path.setAttribute('stroke-linecap', 'round');
-    path.setAttribute('marker-end', 'url(#snakeHead)');
+    // marker-end removed (no defined marker)
     path.setAttribute('opacity', '0.9');
     path.setAttribute('filter', 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))');
     overlayElement.appendChild(path);
 
-    // Add downward arrow at snake tail (end position)
+    // Add downward arrow at snake tail (end)
     const angle = Math.atan2(dy, dx);
     const arrowSize = 12;
     const x1 = e.x - arrowSize * Math.cos(angle - Math.PI/6);
     const y1 = e.y - arrowSize * Math.sin(angle - Math.PI/6);
     const x2 = e.x - arrowSize * Math.cos(angle + Math.PI/6);
     const y2 = e.y - arrowSize * Math.sin(angle + Math.PI/6);
-    
+
     const arrowDown = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
     arrowDown.setAttribute('points', `${e.x},${e.y} ${x1},${y1} ${x2},${y2}`);
     arrowDown.setAttribute('fill', '#dc2626');
@@ -411,7 +411,7 @@
     clearOverlayPathsKeepDefs();
     Object.entries(LADDERS).forEach(([s, e]) => drawLadder(Number(s), Number(e)));
     Object.entries(SNAKES).forEach(([s, e]) => drawSnake(Number(s), Number(e)));
-}
+  }
 
 // Pemain
 function initializePlayers() {
@@ -608,6 +608,24 @@ function updateUI() {
           : '<span class="token-icon">👤</span>';
         // Animasi pulse untuk pemain aktif
         tokenIndicator.style.animation = 'pulse 1.5s infinite';
+    }
+
+    // Update token active highlight di papan
+    players.forEach((p, idx) => {
+        const t = document.getElementById(`token-${p.id}`);
+        if (t) {
+            t.classList.toggle('active', idx === currentTurn);
+            t.style.boxShadow = idx === currentTurn ? '0 0 0 3px rgba(99, 102, 241, 0.8)' : '';
+            t.style.transform = idx === currentTurn ? 'scale(1.1)' : 'scale(1)';
+        }
+    });
+
+    // Kontrol tombol roll berdasarkan status
+    if (rollButton) {
+        const isAI = !!(players[currentTurn] && players[currentTurn].isAI);
+        const disabled = !isGameInProgress || isAnimating || isAI;
+        rollButton.disabled = disabled;
+        rollButton.classList.toggle('disabled', disabled);
     }
 
     // Update scoreboard
@@ -817,82 +835,135 @@ function movePlayerTo(playerId, targetPos) {
 }
 
 async function rollDiceInternal() {
-    if (!isGameInProgress) return;
+    if (!isGameInProgress || isAnimating) return;
     
     const currentPlayer = players[currentTurn];
     if (!currentPlayer) return;
 
-    // Play dice roll sound
-    if (window.AudioSystem) {
-      window.AudioSystem.playSFX('dice_roll');
+    // Lock interaksi saat animasi giliran
+    isAnimating = true;
+    if (rollButton) {
+      rollButton.disabled = true;
+      rollButton.classList.add('disabled');
     }
 
-    // Generate dice value
-    let diceValue = Math.floor(Math.random() * 6) + 1;
-    
-    // Apply skill effects
-    if (window.getActiveEffects) {
-      const effects = window.getActiveEffects(currentPlayer.id);
-      if (effects.double_roll) {
-        diceValue = Math.max(diceValue, Math.floor(Math.random() * 6) + 1);
-        delete effects.double_roll;
+    let threw = false;
+    try {
+      // Play dice roll sound
+      if (window.AudioSystem) {
+        window.AudioSystem.playSFX('dice_roll');
       }
-      if (effects.dice_boost) {
-        diceValue = Math.min(6, diceValue + 2);
-        delete effects.dice_boost;
+
+      // Generate dice value
+      let diceValue = Math.floor(Math.random() * 6) + 1;
+      
+      // Apply skill effects
+      if (window.getActiveEffects) {
+        const effects = window.getActiveEffects(currentPlayer.id);
+        if (effects.double_roll) {
+          diceValue = Math.max(diceValue, Math.floor(Math.random() * 6) + 1);
+          delete effects.double_roll;
+        }
+        if (effects.dice_boost) {
+          diceValue = Math.min(6, diceValue + 2);
+          delete effects.dice_boost;
+        }
+        if (effects.lucky_seven) {
+          diceValue = 6; // Guaranteed six
+          delete effects.lucky_seven;
+        }
       }
-      if (effects.lucky_seven) {
-        diceValue = 6; // Guaranteed six
-        delete effects.lucky_seven;
+
+      // Animate dice roll
+      await animateDice();
+      
+      // Update dice display
+      updateDiceVisual(diceValue);
+
+      // Move player
+      const steps = diceValue;
+      await movePlayer(currentPlayer.id, steps);
+      // Jika game berakhir saat bergerak, hentikan
+      if (!isGameInProgress) {
+        isAnimating = false;
+        return;
       }
-    }
 
-    // Animate dice roll
-    await animateDice();
-    
-    // Update dice display
-    updateDiceVisual(diceValue);
-
-    // Move player
-    const steps = diceValue;
-    await movePlayer(currentPlayer.id, steps);
-
-    // Check for extra turn
-    let hasExtraTurn = false;
-    if (window.getActiveEffects) {
-      const effects = window.getActiveEffects(currentPlayer.id);
-      if (effects.extra_turn) {
-        hasExtraTurn = true;
-        delete effects.extra_turn;
+      // Check for extra turn
+      let hasExtraTurn = false;
+      if (window.getActiveEffects) {
+        const effects = window.getActiveEffects(currentPlayer.id);
+        if (effects.extra_turn) {
+          hasExtraTurn = true;
+          delete effects.extra_turn;
+        }
       }
-    }
 
-    // Process turn end
-    if (window.processTurnCooldowns) {
-      window.processTurnCooldowns(currentPlayer.id);
-    }
+      // Process turn end (cooldowns)
+      if (window.processTurnCooldowns) {
+        window.processTurnCooldowns(currentPlayer.id);
+      }
 
-    // Next turn (unless extra turn)
-    if (!hasExtraTurn) {
+      // Jika extra turn, pemain yang sama lanjut lagi
+      if (hasExtraTurn) {
+        updateUI();
+        isAnimating = false;
+        if (players[currentTurn] && players[currentTurn].isAI) {
+          setTimeout(() => {
+            if (window.processAISkills) {
+              window.processAISkills(players[currentTurn].id);
+            }
+            setTimeout(() => { if (isGameInProgress) rollDiceInternal(); }, 1500);
+          }, 800);
+        } else {
+          if (rollButton) {
+            rollButton.disabled = false;
+            rollButton.classList.remove('disabled');
+          }
+        }
+        return;
+      }
+
+      // Giliran berikutnya
       setTimeout(() => {
         if (window.AudioSystem) {
           window.AudioSystem.playSFX('turn_change');
         }
         currentTurn = (currentTurn + 1) % players.length;
         updateUI();
-        
-        // AI turn
+        isAnimating = false;
+
+        // AI atau Human
         if (players[currentTurn] && players[currentTurn].isAI) {
           setTimeout(() => {
             if (window.processAISkills) {
               window.processAISkills(players[currentTurn].id);
             }
-            rollDiceInternal();
-          }, 1500);
+            setTimeout(() => { if (isGameInProgress) rollDiceInternal(); }, 1500);
+          }, 800);
+        } else {
+          if (rollButton) {
+            rollButton.disabled = false;
+            rollButton.classList.remove('disabled');
+          }
         }
       }, 1000);
-    } else {
-      updateUI();
+    } catch (err) {
+      threw = true;
+      console.error('rollDiceInternal error:', err);
+      showNotification('Terjadi kesalahan saat memproses giliran. Melanjutkan permainan.', 'error');
+    } finally {
+      if (threw) {
+        isAnimating = false;
+        if (isGameInProgress) {
+          const cp = players[currentTurn];
+          if (cp && !cp.isAI && rollButton) {
+            rollButton.disabled = false;
+            rollButton.classList.remove('disabled');
+          }
+        }
+        updateUI();
+      }
     }
 }
 
