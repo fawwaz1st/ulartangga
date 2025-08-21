@@ -205,14 +205,14 @@ body {
   padding: var(--space-2xl);
   width: 90%;
   max-width: 500px;
-  min-height: 80vh;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   box-shadow: var(--shadow-2xl);
   text-align: center;
   transition: all 0.3s ease;
   overflow-y: auto;
+  gap: var(--space-lg);
 }
 
 .game-logo {
