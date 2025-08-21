@@ -205,7 +205,7 @@ body {
   padding: var(--space-2xl);
   width: 90%;
   max-width: 500px;
-  max-height: 90vh;
+  max-height: 95vh;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-2xl);
@@ -225,6 +225,7 @@ body {
   justify-content: center;
   box-shadow: var(--shadow-lg);
   animation: pulse-glow 2.5s infinite ease-in-out;
+  margin: 0 auto;
 }
 
 .logo-icon {
@@ -251,6 +252,7 @@ body {
   flex-direction: column;
   gap: var(--space-md);
   width: 100%;
+  margin-top: var(--space-lg);
 }
 
 .menu-btn {
@@ -337,7 +339,8 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-md);
-  margin-top: var(--space-lg);
+  margin-top: auto;
+  padding-top: var(--space-lg);
 }
 
 .stat-card {
@@ -534,7 +537,7 @@ body {
   .main-menu-container {
     padding: var(--space-lg);
     gap: var(--space-lg);
-    min-height: 90vh;
+    max-height: 95vh;
   }
   
   .game-title {
