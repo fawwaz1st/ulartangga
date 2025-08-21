@@ -1,5 +1,3 @@
-/* Menu Styles - Ular Tangga */
-
 :root {
   /* Modern Color System */
   --primary: #6366f1;
@@ -200,23 +198,21 @@ body {
 }
 
 .main-menu-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-xl);
-  max-width: 450px;
-  width: 100%;
-  padding: var(--space-xl);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
+  padding: var(--space-2xl);
+  width: 90%;
+  max-width: 500px;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   box-shadow: var(--shadow-2xl);
   text-align: center;
-  animation: slideInUp 0.5s ease-out;
-  margin: 2rem auto;
-  max-height: calc(100vh - 4rem);
-  overflow: hidden;
+  transition: all 0.3s ease;
+  overflow-y: auto;
 }
 
 .game-logo {
@@ -538,6 +534,7 @@ body {
   .main-menu-container {
     padding: var(--space-lg);
     gap: var(--space-lg);
+    min-height: 90vh;
   }
   
   .game-title {
@@ -603,3 +600,4 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gradient-secondary);
 }
+
