@@ -83,7 +83,15 @@
 }
 
 /* ==========================================================================
-   Tata letak: 3 zona asimetris, jatuh ke satu kolom di layar sempit
+   Tata letak
+
+   Aturan utama: PAPAN SELALU MENANG.
+   Papan harus selalu terlihat utuh tanpa scroll, di orientasi apa pun.
+   Empat zona ditata ulang lewat grid area pada tiap breakpoint:
+     - Desktop lebar  : kontrol kiri, papan tengah, skor kanan
+     - Tablet / iPad  : kontrol kiri, papan tengah, skor+s kill kanan
+     - Ponsel portrait: kontrol ringkas di atas, papan, lalu skor & skill
+     - Ponsel landscape: satu baris, papan di tengah, panel jadi kolom sempit
    ========================================================================== */
 
 .table {
@@ -93,15 +101,18 @@
   margin: 0 auto;
   padding: var(--s4);
   display: grid;
-  grid-template-columns: minmax(230px, 260px) minmax(0, 1fr) minmax(260px, 330px);
-  grid-template-areas: 'control board score';
   gap: var(--s4);
   align-items: start;
+  grid-template-columns: minmax(210px, 250px) minmax(0, 1fr) minmax(250px, 320px);
+  grid-template-areas:
+    'turn  board score'
+    'skills board score';
 }
 
-.zone-control { grid-area: control; }
-.zone-board   { grid-area: board; }
-.zone-score   { grid-area: score; }
+.zone-turn   { grid-area: turn; }
+.zone-board  { grid-area: board; }
+.zone-skills { grid-area: skills; }
+.zone-score  { grid-area: score; }
 
 /* ==========================================================================
    Panel: potongan papan yang dipaku ke meja
@@ -465,12 +476,25 @@
    Papan: papan cat di atas meja
    ========================================================================== */
 
-.board-zone { display: flex; justify-content: center; }
+/* align-items wajib flex-start: dengan stretch (default), papan ikut
+   ditarik tinggi grid row dan aspect-ratio: 1 diabaikan sehingga papan
+   jadi gepeng di layout landscape. */
+.board-zone {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+}
 
 .board-frame {
   position: relative;
   width: min(100%, calc(100dvh - 190px));
   aspect-ratio: 1;
+  /* Wadah kueri: elemen di dalam papan bisa menyesuaikan ukuran papan,
+     bukan ukuran viewport. Penting karena papan dibatasi dvh di landscape,
+     sehingga satuan vw memberi hasil yang salah. */
+  container-type: inline-size;
+  container-name: board;
   padding: clamp(10px, 1.4vw, 18px);
   border-radius: var(--r-board);
   background-color: var(--wood-700);
@@ -540,7 +564,10 @@
   background: transparent;
   color: var(--ink-soft);
   font-family: var(--font-mono);
-  font-size: clamp(0.42rem, 1.02vw, 0.72rem);
+  /* 1cqw = 1% lebar papan. Satu kotak = 10% lebar papan, jadi 2.6cqw
+     selalu proporsional terhadap kotak, di orientasi apa pun.
+     Batas bawah 0.5rem menjaga angka tetap terbaca. */
+  font-size: max(0.5rem, 2.6cqw);
   font-weight: 700;
   box-shadow: inset 0 0 0 1px oklch(0.70 0.04 78 / 0.55);
 }
@@ -580,7 +607,7 @@
   right: 1px;
   width: 42%;
   aspect-ratio: 1;
-  max-width: 15px;
+  max-width: min(15px, 5cqw);
   opacity: 0.85;
 }
 
@@ -813,52 +840,353 @@
 
 /* ==========================================================================
    Responsif
+
+   Prinsip: PAPAN SELALU MENANG. Papan harus terlihat utuh tanpa scroll
+   di orientasi apa pun, karena itu satu-satunya elemen yang wajib dipantau.
+
+   Empat mode tata letak:
+     1. Desktop lebar (>= 1181px)   : 3 kolom, kontrol kiri, skor kanan
+     2. Tablet landscape            : papan kiri, panel menumpuk di kanan
+     3. Tablet portrait & ponsel    : 1 kolom, baris giliran+dadu dipadatkan
+     4. Ponsel landscape (rendah)   : 3 kolom sempit, semua elemen dipadatkan
    ========================================================================== */
 
-@media (max-width: 1120px) {
+/* ---- 2. Tablet: papan kiri, panel menumpuk di kanan ------------------- */
+
+@media (min-width: 700px) and (max-width: 1180px) {
   .table {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 290px);
     grid-template-areas:
-      'control score'
-      'board board';
+      'board turn'
+      'board score'
+      'board skills';
+    gap: var(--s3);
+    padding: var(--s3);
   }
 
-  .board-frame { width: min(100%, 660px); }
+  /* Papan dibatasi lebar kolom DAN tinggi layar, mana yang lebih kecil. */
+  .board-frame {
+    width: min(100%, calc(100dvh - 110px));
+  }
+
+  .plank { padding: 10px; gap: 8px; }
+  .plank__title { font-size: 0.9rem; }
+  .skill-note { display: none; }
+  .skill-card { width: 46px; height: 54px; }
+  .skill-card svg { width: 21px; height: 21px; }
+
+  .turn { min-height: 0; padding: 8px 10px; gap: 10px; }
+  .turn__disc { width: 40px; height: 40px; }
+  .turn__disc svg { width: 20px; height: 20px; }
+  .turn__who { font-size: 1rem; }
+  .turn__hint { font-size: 0.74rem; }
+
+  .dice-cube { width: 72px; height: 72px; padding: 10px; gap: 4px; }
+  .dice-log { font-size: 0.76rem; }
+
+  .score-item { padding: 6px 9px; gap: 8px; }
+  .score-item__disc { width: 26px; height: 26px; }
+  .score-item__disc svg { width: 15px; height: 15px; }
+  .score-item__who { font-size: 0.84rem; }
+  .score-item__pos { font-size: 0.94rem; }
 }
 
-@media (max-width: 640px) {
+/* ---- 3. Ponsel: satu kolom ------------------------------------------- */
+
+@media (max-width: 699px) {
   .table {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      'control'
+      'turn'
       'board'
-      'score';
+      'score'
+      'skills';
     padding: var(--s3);
     gap: var(--s3);
   }
 
   .topbar { position: static; }
 
-  /* Bilah atas di layar sempit: sembunyikan nama, sisakan ikon dadu + label mode. */
-  .topbar__name { display: none; }
-  .topbar__die { width: 30px; height: 30px; }
-  .topbar__actions { gap: 6px; }
-  .icon-btn { width: 38px; height: 38px; }
-  .icon-btn svg { width: 18px; height: 18px; }
+  .board-frame {
+    /* Tinggi non-papan di ponsel (topbar 61 + padding 24 + gap 36
+       + giliran 100 + skor 60 + skill 95 + catatan dadu 20) sekitar 396 px.
+       Sisakan margin aman supaya seluruh halaman muat tanpa scroll. */
+    width: min(100%, max(200px, calc(100dvh - 396px)));
+    min-width: 0;
+  }
 
-  .board-frame { width: 100%; }
+  /* Catatan dadu pindah ke bawah kartu giliran, bukan di samping dadu.
+     Informasi hasil lemparan tetap terlihat, tinggi tetap hemat. */
+  .zone-turn {
+    flex-wrap: wrap;
+  }
 
-  .dice-cube { width: 84px; height: 84px; padding: 11px; }
+  .zone-turn .dice-zone {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s2);
+  }
 
-  .turn { min-height: 66px; }
+  .zone-turn .dice-log {
+    flex: 1 1 100%;
+    max-width: none;
+    order: 3;
+    font-size: 0.74rem;
+    min-height: 0;
+    text-align: left;
+  }
 
-  .turn__disc { width: 44px; height: 44px; }
+  /* Papan skor dipadatkan. */
+  .zone-score { padding: 8px 10px; gap: 6px; }
+  .score-item { padding: 5px 8px; }
+  .score-item__track { height: 4px; margin-top: 4px; }
 
-  .turn__disc svg { width: 22px; height: 22px; }
+  /* Giliran dan dadu jadi satu baris supaya papan naik ke atas. */
+  .zone-turn {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s3);
+  }
 
-  .turn__who { font-size: 1.08rem; }
+  .zone-turn .turn {
+    flex: 1 1 auto;
+    /* min-width:0 wajib: flex item defaultnya tidak boleh menyusut
+       di bawah lebar konten, dan itu memicu overflow di layar sempit. */
+    min-width: 0;
+    min-height: 0;
+    padding: 8px 10px;
+  }
 
-  .skill-card { width: 50px; height: 58px; }
+  .zone-turn .dice-zone {
+    flex: 0 0 auto;
+    padding-top: 0;
+    gap: 4px;
+  }
+
+  .zone-turn .dice-cube {
+    width: 66px;
+    height: 66px;
+    padding: 9px;
+    gap: 4px;
+  }
+
+  .zone-turn .dice-btn__label { display: none; }
+
+  .zone-turn .dice-log {
+    max-width: 132px;
+    font-size: 0.72rem;
+    min-height: 0;
+  }
+
+  .turn__disc { width: 42px; height: 42px; }
+  .turn__disc svg { width: 21px; height: 21px; }
+  .turn__who { font-size: 1.02rem; }
+  .turn__hint { font-size: 0.74rem; }
+
+  /* Pastikan isi kartu giliran tidak mendorong lebar keluar. */
+  .turn__meta { min-width: 0; }
+  .turn__who,
+  .turn__hint {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Kartu skor juga tidak boleh memaksa lebar. */
+  .score-item { min-width: 0; }
+  .score-item__body { min-width: 0; }
+  .plank { min-width: 0; }
+  .board-frame { max-width: 100%; }
+
+  /* Papan skor jadi kartu-kartu mendatar, hemat tinggi. */
+  .score-list { flex-direction: row; flex-wrap: wrap; }
+
+  .score-item {
+    flex: 1 1 140px;
+    padding: 6px 9px;
+    gap: 8px;
+  }
 
   .score-item__disc { width: 26px; height: 26px; }
+  .score-item__disc svg { width: 15px; height: 15px; }
+  .score-item__who { font-size: 0.84rem; }
+  .score-item__pos { font-size: 0.94rem; }
+
+  /* Kartu skill lebih ringkas. */
+  .skill-card { width: 48px; height: 56px; }
+  .skill-card svg { width: 22px; height: 22px; }
+  .skill-note { display: none; }
+
+  .plank { padding: 10px; gap: 8px; }
+  .plank__title { font-size: 0.9rem; }
+}
+
+/* Layar sempit: rapatkan bilah atas supaya nama game tetap utuh.
+   Empat tombol aksi butuh 170px, jadi sisanya harus dihemat dari sini. */
+@media (max-width: 430px) {
+  .topbar { padding: 8px 10px; gap: 8px; }
+
+  .topbar__brand { gap: 7px; min-width: 0; }
+  .topbar__die { width: 26px; height: 26px; }
+  .topbar__name { font-size: 0.9rem; min-width: 0; }
+
+  .topbar__actions { gap: 5px; }
+  .icon-btn { width: 34px; height: 34px; }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  .mode-tag {
+    font-size: 0.54rem;
+    padding: 1px 5px 2px;
+    letter-spacing: 0.06em;
+  }
+}
+
+/* Ponsel dengan tinggi terbatas (iPhone SE, Fold, dan sejenisnya).
+   Semua elemen dirapatkan supaya papan tetap muat tanpa scroll. */
+@media (max-width: 699px) and (max-height: 700px) {
+  .topbar { padding: 6px 10px; }
+  .topbar__die { width: 26px; height: 26px; }
+  .icon-btn { width: 36px; height: 36px; }
+  .icon-btn svg { width: 17px; height: 17px; }
+  .mode-tag { font-size: 0.58rem; padding: 1px 6px 2px; }
+
+  .table { padding: 8px; gap: 8px; }
+  .plank { padding: 8px; gap: 6px; }
+
+  .board-frame {
+    width: min(100%, max(200px, calc(100dvh - 330px)));
+  }
+
+  .turn { padding: 6px 8px; gap: 8px; }
+  .turn__disc { width: 36px; height: 36px; }
+  .turn__disc svg { width: 18px; height: 18px; }
+  .turn__who { font-size: 0.94rem; }
+  .turn__hint { font-size: 0.7rem; }
+
+  .dice-cube { width: 58px; height: 58px; padding: 8px; gap: 3px; }
+  .dice-log { font-size: 0.7rem; }
+
+  .plank__title { font-size: 0.86rem; }
+  .skill-card { width: 44px; height: 52px; }
+  .skill-card svg { width: 20px; height: 20px; }
+
+  .score-item { padding: 4px 8px; gap: 7px; }
+  .score-item__disc { width: 24px; height: 24px; }
+  .score-item__disc svg { width: 14px; height: 14px; }
+  .score-item__who { font-size: 0.8rem; }
+  .score-item__pos { font-size: 0.88rem; }
+}
+
+/* Ponsel sangat sempit (Galaxy Fold tertutup, 280-360 px):
+   satu baris giliran+dadu tidak cukup, jadi bertumpuk kembali.
+   Nama game disembunyikan karena bilah atas tidak muat. */
+@media (max-width: 360px) {
+  .topbar__name { display: none; }
+  .zone-turn {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .zone-turn .turn { width: 100%; }
+
+  .zone-turn .dice-zone {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--s3);
+  }
+
+  .zone-turn .dice-log {
+    max-width: none;
+    text-align: left;
+  }
+
+  .table { padding: 8px; gap: 8px; }
+  .plank { padding: 8px; }
+  .sq__no { font-size: 0.44rem; }
+}
+
+/* ---- 4. Ponsel landscape: 3 kolom sempit, tinggi sangat terbatas ------ */
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .topbar {
+    position: static;
+    padding: 6px 10px;
+  }
+
+  .topbar__name { font-size: 0.92rem; }
+  .topbar__die { width: 26px; height: 26px; }
+  .icon-btn { width: 34px; height: 34px; }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .mode-tag { font-size: 0.58rem; padding: 1px 6px 2px; }
+
+  .table {
+    grid-template-columns: minmax(150px, 190px) minmax(0, 1fr) minmax(150px, 200px);
+    grid-template-areas: 'turn board score' 'turn board skills';
+    padding: 8px;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .plank {
+    padding: 8px;
+    gap: 6px;
+    border-radius: var(--r-plate);
+  }
+
+  /* Judul panel dibuang, ruangnya dipakai untuk isi. */
+  .plank__title { display: none; }
+  .skill-note { display: none; }
+
+  .board-frame {
+    /* Hanya lebar yang dibatasi; aspect-ratio: 1 menjaga papan tetap persegi.
+       Menyetel height juga akan menimpa aspect-ratio dan membuatnya gepeng. */
+    width: min(100%, calc(100dvh - 66px));
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  .zone-turn {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .turn {
+    min-height: 0;
+    padding: 6px 8px;
+    gap: 8px;
+  }
+
+  .turn__disc { width: 32px; height: 32px; }
+  .turn__disc svg { width: 16px; height: 16px; }
+  .turn__who { font-size: 0.86rem; }
+  .turn__hint { display: none; }
+
+  .dice-zone { gap: 2px; }
+
+  .dice-cube {
+    width: 56px;
+    height: 56px;
+    padding: 8px;
+    gap: 3px;
+    border-radius: 10px;
+  }
+
+  .dice-btn__label { font-size: 0.74rem; }
+  .dice-log { font-size: 0.68rem; }
+
+  .score-item { padding: 4px 7px; gap: 6px; }
+  .score-item__disc { width: 22px; height: 22px; }
+  .score-item__disc svg { width: 13px; height: 13px; }
+  .score-item__who { font-size: 0.76rem; }
+  .score-item__pos { font-size: 0.82rem; }
+  .score-item__track { height: 3px; margin-top: 3px; }
+  .tag { font-size: 0.5rem; padding: 0 4px; }
+
+  .skill-card { width: 40px; height: 46px; }
+  .skill-card svg { width: 19px; height: 19px; }
+  .skill-card__cd { min-width: 19px; height: 19px; font-size: 0.6rem; top: -7px; right: -7px; }
+  .skill-card__live { width: 17px; height: 17px; font-size: 0.68rem; top: -7px; left: -7px; }
 }

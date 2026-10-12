@@ -59,8 +59,8 @@
     </header>
 
     <main class="table">
-      <!-- Zona kontrol -->
-      <section class="zone-control plank" aria-label="Kontrol permainan">
+      <!-- Zona giliran & dadu -->
+      <section class="zone-turn plank" aria-label="Giliran dan dadu">
         <div class="turn">
           <span class="turn__disc" id="turn-disc" data-color="p1" aria-hidden="true"></span>
           <span class="turn__meta">
@@ -76,15 +76,6 @@
           </button>
           <p class="dice-log" id="dice-log">Lempar dadu untuk mulai.</p>
         </div>
-
-        <div>
-          <h2 class="plank__title" style="margin-bottom: 8px;">
-            <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24"><use href="#i-sparkles"></use></svg>
-            <span>Kartu Skill</span>
-          </h2>
-          <div class="skill-hand" id="skill-hand" role="group" aria-label="Kartu skill milikmu"></div>
-          <p class="skill-note" style="margin-top: 8px;">Arahkan kursor ke kartu untuk keterangan. Satu efek aktif per waktu.</p>
-        </div>
       </section>
 
       <!-- Zona papan -->
@@ -96,6 +87,16 @@
             <div class="board-pieces" id="board-pieces" aria-hidden="true"></div>
           </div>
         </div>
+      </section>
+
+      <!-- Zona kartu skill -->
+      <section class="zone-skills plank" aria-label="Kartu skill">
+        <h2 class="plank__title">
+          <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24"><use href="#i-sparkles"></use></svg>
+          <span>Kartu Skill</span>
+        </h2>
+        <div class="skill-hand" id="skill-hand" role="group" aria-label="Kartu skill milikmu"></div>
+        <p class="skill-note">Satu efek aktif per waktu. Kartu abu-abu sedang cooldown.</p>
       </section>
 
       <!-- Zona skor -->
