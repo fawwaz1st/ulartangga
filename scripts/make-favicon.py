@@ -1,0 +1,76 @@
+"""Buat favicon.ico dari geometri yang sama dengan favicon.svg.
+
+Digambar langsung dengan PIL (tanpa rasterisasi SVG) supaya hasilnya tajam
+di setiap ukuran dan tidak butuh dependensi tambahan.
+
+Jalankan: python scripts/make-favicon.py
+"""
+
+from pathlib import Path
+
+from PIL import Image, ImageDraw
+
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "assets" / "images" / "favicon.ico"
+
+# Palet sama dengan token di base.css (kayu + muka dadu).
+WOOD_LIGHT = (201, 138, 75, 255)
+WOOD_DARK = (138, 83, 38, 255)
+FACE_LIGHT = (247, 234, 208, 255)
+FACE_DARK = (223, 201, 160, 255)
+PIP = (107, 68, 35, 255)
+
+# Skala gambar di 256 px lalu diperkecil; supersampling bikin tepi halus.
+BASE = 256
+
+
+def lerp(a, b, t):
+    return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(4))
+
+
+def vertical_gradient(size, top, bottom, box, radius):
+    """Isi kotak bersudut bulat dengan gradasi vertikal, di luar kotak transparan."""
+    grad = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(grad)
+    x0, y0, x1, y1 = box
+    height = max(1, y1 - y0)
+    for y in range(y0, y1):
+        draw.line([(x0, y), (x1, y)], fill=lerp(top, bottom, (y - y0) / height))
+
+    mask = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(box, radius=radius, fill=255)
+    grad.putalpha(mask)
+    return grad
+
+
+def build():
+    size = BASE
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+
+    # Badan kayu
+    img.alpha_composite(
+        vertical_gradient(size, WOOD_LIGHT, WOOD_DARK, (16, 16, 240, 240), 52)
+    )
+    # Muka dadu
+    img.alpha_composite(
+        vertical_gradient(size, FACE_LIGHT, FACE_DARK, (32, 32, 224, 224), 36)
+    )
+
+    # Pip pola 5, sama dengan sisi dadu di permainan
+    draw = ImageDraw.Draw(img)
+    r = 18
+    for cx, cy in [(88, 88), (168, 88), (128, 128), (88, 168), (168, 168)]:
+        draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=PIP)
+
+    return img
+
+
+def main():
+    icon = build()
+    sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
+    icon.save(OUT, format="ICO", sizes=sizes)
+    print(f"Ditulis: {OUT} ({OUT.stat().st_size} byte, {len(sizes)} ukuran)")
+
+
+if __name__ == "__main__":
+    main()
