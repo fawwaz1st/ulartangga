@@ -1,0 +1,864 @@
+/* ==========================================================================
+   Ular Tangga Modern — game.css
+   Meja permainan: papan kayu di tengah, panel kontrol dan papan skor di
+   sayap, seperti meja warung tempat papan ini benar-benar dimainkan.
+
+   Grid utama sengaja asimetris (kanan lebih lebar dari kiri) karena panel
+   kontrol butuh ruang lebih untuk dadu; skor hanya daftar angka.
+   ========================================================================== */
+
+.game {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   Bilah atas: kayu yang dipasang, bukan kaca melayang
+   ========================================================================== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: 10px clamp(12px, 2.6vw, 26px);
+  background-color: var(--wood-700);
+  background-image:
+    var(--noise),
+    linear-gradient(180deg, var(--wood-600), var(--wood-700) 70%, var(--wood-800));
+  background-size: 160px 160px, auto;
+  background-blend-mode: soft-light, normal;
+  border-bottom: 3px solid oklch(0.20 0.03 46);
+  box-shadow: 0 6px 16px oklch(0.12 0.03 45 / 0.45);
+}
+
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.topbar__die {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+}
+
+.topbar__name {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Label mode: potongan kecil kertas yang ditempel. */
+.mode-tag {
+  flex: 0 0 auto;
+  padding: 2px 9px 3px;
+  border-radius: var(--r-chip);
+  background: var(--paper-300);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+  box-shadow: 2px 2px 0 oklch(0.18 0.03 46 / 0.45);
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* ==========================================================================
+   Tata letak: 3 zona asimetris, jatuh ke satu kolom di layar sempit
+   ========================================================================== */
+
+.table {
+  flex: 1;
+  width: 100%;
+  max-width: 1580px;
+  margin: 0 auto;
+  padding: var(--s4);
+  display: grid;
+  grid-template-columns: minmax(230px, 260px) minmax(0, 1fr) minmax(260px, 330px);
+  grid-template-areas: 'control board score';
+  gap: var(--s4);
+  align-items: start;
+}
+
+.zone-control { grid-area: control; }
+.zone-board   { grid-area: board; }
+.zone-score   { grid-area: score; }
+
+/* ==========================================================================
+   Panel: potongan papan yang dipaku ke meja
+   ========================================================================== */
+
+.plank {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s3);
+  border-radius: var(--r-board);
+  background-color: var(--wood-700);
+  background-image:
+    var(--noise),
+    repeating-linear-gradient(
+      88deg,
+      transparent 0 5px,
+      oklch(0.22 0.03 48 / 0.28) 5px 6px,
+      transparent 6px 17px
+    ),
+    linear-gradient(180deg, var(--wood-600), var(--wood-700));
+  background-size: 160px 160px, auto, auto;
+  background-blend-mode: soft-light, multiply, normal;
+  border: 2px solid oklch(0.22 0.03 46);
+  box-shadow:
+    inset 0 1px 0 oklch(0.60 0.06 68 / 0.4),
+    var(--print-1),
+    0 10px 22px oklch(0.12 0.03 45 / 0.4);
+}
+
+/* Paku kecil di tiap sudut papan. */
+.plank::before,
+.plank::after {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-round);
+  background: radial-gradient(circle at 35% 30%, oklch(0.72 0.03 80), oklch(0.40 0.03 60));
+  box-shadow: inset 0 -1px 1px oklch(0.20 0.03 46 / 0.8);
+}
+
+.plank { position: relative; }
+.plank::before { top: 7px; left: 7px; }
+.plank::after { bottom: 7px; right: 7px; }
+
+.plank__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--chalk);
+  text-shadow: 0 1px 0 oklch(0.18 0.03 46 / 0.7);
+}
+
+.plank__title svg { flex: 0 0 auto; width: 17px; height: 17px; color: var(--paint-yellow); }
+
+/* ==========================================================================
+   Kartu giliran: label yang diukir di papan
+   ========================================================================== */
+
+.turn {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3);
+  border-radius: var(--r-plate);
+  background: oklch(0.24 0.035 48 / 0.72);
+  box-shadow: var(--press);
+  min-height: 74px;
+}
+
+/* Pion yang sedang jalan: cakram kayu dicat. */
+.turn__disc {
+  position: relative;
+  flex: 0 0 auto;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--paint-red);
+  box-shadow:
+    inset 0 -3px 0 oklch(0.30 0.08 30 / 0.6),
+    inset 0 2px 0 oklch(0.90 0.06 60 / 0.35),
+    0 3px 6px oklch(0.12 0.03 45 / 0.5);
+  transition: background 0.25s ease;
+}
+
+.turn__disc svg { width: 26px; height: 26px; color: var(--paper-100); }
+
+.turn__disc[data-color='p1'] { background: var(--paint-red); }
+.turn__disc[data-color='p2'] { background: var(--paint-blue); }
+.turn__disc[data-color='p3'] { background: var(--paint-green); }
+.turn__disc[data-color='p4'] { background: oklch(0.62 0.12 300); }
+
+.turn__meta { min-width: 0; }
+
+.turn__who {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.turn__hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.79rem;
+  color: var(--chalk-dim);
+}
+
+/* ==========================================================================
+   Dadu: kubus kayu dengan pip dicat
+   ========================================================================== */
+
+.dice-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: var(--s1);
+}
+
+.dice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--r-board);
+  transition: transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dice-btn:disabled { cursor: not-allowed; }
+.dice-btn:hover:not(:disabled) { transform: translateY(-2px); }
+.dice-btn:active:not(:disabled) { transform: translateY(1px); }
+
+.dice-cube {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  padding: 13px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+  border-radius: 14px;
+  background-color: var(--paper-100);
+  background-image:
+    var(--noise),
+    radial-gradient(90% 80% at 30% 20%, oklch(0.99 0.01 95) 0%, transparent 60%),
+    linear-gradient(150deg, var(--paper-100), var(--paper-300));
+  background-size: 160px 160px, auto, auto;
+  background-blend-mode: soft-light, normal, normal;
+  box-shadow:
+    inset 0 -4px 0 oklch(0.76 0.04 82 / 0.9),
+    inset 0 2px 0 oklch(1 0 0 / 0.8),
+    4px 4px 0 oklch(0.18 0.03 46 / 0.5),
+    0 10px 18px oklch(0.12 0.03 45 / 0.4);
+}
+
+.dice-btn:disabled .dice-cube {
+  filter: saturate(0.4) brightness(0.9);
+}
+
+/* Pip: bulatan cat gelap, hanya yang aktif terlihat. */
+.pip {
+  border-radius: var(--r-round);
+  background: radial-gradient(circle at 34% 30%, oklch(0.44 0.06 55), oklch(0.24 0.04 48));
+  box-shadow: inset 0 -1px 1px oklch(0.15 0.03 45 / 0.7);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.pip.is-on { opacity: 1; transform: scale(1); }
+
+/* Kocokan: goyang cepat lalu mendarat dengan hentakan. */
+.dice-cube.is-tumbling { animation: tumble 0.42s ease-in-out infinite; }
+
+@keyframes tumble {
+  0%, 100% { transform: rotate(0deg) translateY(0) scale(1); }
+  25% { transform: rotate(-13deg) translateY(-7px) scale(1.06); }
+  50% { transform: rotate(11deg) translateY(0) scale(0.95); }
+  75% { transform: rotate(-7deg) translateY(-4px) scale(1.03); }
+}
+
+/* Hentakan saat dadu berhenti: squash lalu stretch. */
+.dice-cube.is-landing { animation: land 0.28s cubic-bezier(0.34, 1.5, 0.64, 1); }
+
+@keyframes land {
+  0% { transform: scale(1.12, 0.88); }
+  45% { transform: scale(0.94, 1.08); }
+  100% { transform: scale(1, 1); }
+}
+
+.dice-btn__label {
+  font-weight: 700;
+  font-size: 0.94rem;
+  text-shadow: 0 1px 0 oklch(0.18 0.03 46 / 0.7);
+}
+
+.dice-log {
+  margin: 0;
+  min-height: 1.3em;
+  font-size: 0.84rem;
+  text-align: center;
+  color: var(--chalk-dim);
+}
+
+/* ==========================================================================
+   Skill: kartu kecil bercat, seperti kartu remi
+   ========================================================================== */
+
+.skill-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-card {
+  position: relative;
+  width: 54px;
+  height: 64px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: var(--r-chip);
+  background-color: var(--paper-200);
+  background-image: var(--noise);
+  background-size: 160px 160px;
+  background-blend-mode: soft-light;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow:
+    inset 0 -3px 0 oklch(0.76 0.04 82 / 0.85),
+    2px 2px 0 oklch(0.18 0.03 46 / 0.45);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Tiap kartu sedikit miring, seperti kartu yang diletakkan tangan. */
+.skill-card:nth-child(odd) { transform: rotate(-1.4deg); }
+.skill-card:nth-child(even) { transform: rotate(1.1deg); }
+
+.skill-card:hover:not(:disabled) {
+  transform: translateY(-5px) rotate(0deg);
+  box-shadow:
+    inset 0 -3px 0 oklch(0.76 0.04 82 / 0.85),
+    3px 3px 0 oklch(0.18 0.03 46 / 0.45),
+    0 10px 18px oklch(0.12 0.03 45 / 0.4);
+}
+
+.skill-card svg { width: 26px; height: 26px; }
+
+/* Tepi warna sesuai tingkat kelangkaan. */
+.skill-card[data-rarity='common']    { border-bottom: 4px solid oklch(0.62 0.03 60); }
+.skill-card[data-rarity='uncommon']  { border-bottom: 4px solid var(--paint-green); }
+.skill-card[data-rarity='rare']      { border-bottom: 4px solid var(--paint-blue); }
+.skill-card[data-rarity='epic']      { border-bottom: 4px solid oklch(0.55 0.14 300); }
+.skill-card[data-rarity='legendary'] { border-bottom: 4px solid oklch(0.68 0.15 45); }
+
+.skill-card[aria-disabled='true'] {
+  filter: grayscale(0.75) brightness(0.82);
+  cursor: not-allowed;
+}
+
+/* Kartu yang efeknya sedang aktif: cincin kuning. */
+.skill-card.is-live {
+  box-shadow:
+    inset 0 -3px 0 oklch(0.76 0.04 82 / 0.85),
+    0 0 0 3px var(--paint-yellow),
+    2px 2px 0 oklch(0.18 0.03 46 / 0.45);
+}
+
+/* Lencana cooldown: stempel merah. */
+.skill-card__cd {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--paint-red);
+  color: var(--paper-100);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  box-shadow: 1px 1px 0 oklch(0.18 0.03 46 / 0.6);
+}
+
+.skill-card__live {
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-round);
+  background: var(--paint-yellow);
+  color: oklch(0.30 0.06 60);
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 1px 1px 0 oklch(0.18 0.03 46 / 0.6);
+}
+
+.skill-note {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--chalk-dim);
+}
+
+/* Kartu keterangan skill (muncul dari JS, diposisikan fixed). */
+.skill-tip {
+  position: fixed;
+  z-index: 1300;
+  width: max-content;
+  max-width: min(268px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border-radius: var(--r-plate);
+  color: var(--ink);
+  font-size: 0.83rem;
+  line-height: 1.5;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.14s ease, visibility 0.14s ease;
+}
+
+.skill-tip.show { opacity: 1; visibility: visible; }
+
+.skill-tip b { display: block; margin-bottom: 2px; font-size: 0.9rem; }
+
+.skill-tip__meta {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed oklch(0.72 0.04 80 / 0.9);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+/* ==========================================================================
+   Papan: papan cat di atas meja
+   ========================================================================== */
+
+.board-zone { display: flex; justify-content: center; }
+
+.board-frame {
+  position: relative;
+  width: min(100%, calc(100dvh - 190px));
+  aspect-ratio: 1;
+  padding: clamp(10px, 1.4vw, 18px);
+  border-radius: var(--r-board);
+  background-color: var(--wood-700);
+  background-image:
+    var(--noise),
+    repeating-linear-gradient(
+      87deg,
+      transparent 0 6px,
+      oklch(0.22 0.03 48 / 0.3) 6px 7px,
+      transparent 7px 19px
+    ),
+    linear-gradient(165deg, var(--wood-600), var(--wood-800));
+  background-size: 160px 160px, auto, auto;
+  background-blend-mode: soft-light, multiply, normal;
+  border: 2px solid oklch(0.20 0.03 46);
+  box-shadow:
+    inset 0 1px 0 oklch(0.62 0.06 68 / 0.45),
+    inset 0 -3px 0 oklch(0.18 0.03 46 / 0.6),
+    var(--print-2),
+    0 18px 34px oklch(0.12 0.03 45 / 0.45);
+}
+
+/* Getaran papan saat kena ular: umpan balik fisik dari peristiwa di papan. */
+.board-frame.is-shaking { animation: board-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+
+@keyframes board-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  15% { transform: translate(-4px, 2px) rotate(-0.5deg); }
+  30% { transform: translate(4px, -2px) rotate(0.5deg); }
+  45% { transform: translate(-3px, 1px) rotate(-0.35deg); }
+  60% { transform: translate(3px, -1px) rotate(0.35deg); }
+  80% { transform: translate(-1px, 1px) rotate(-0.15deg); }
+}
+
+/* Kertas manila tempat kotak-kotak dicetak. */
+.board-paper {
+  position: absolute;
+  inset: clamp(10px, 1.4vw, 18px);
+  border-radius: var(--r-plate);
+  background-color: var(--paper-200);
+  background-image:
+    var(--noise),
+    radial-gradient(120% 80% at 50% 0%, oklch(0.99 0.01 92) 0%, transparent 55%),
+    radial-gradient(150% 130% at 50% 115%, oklch(0.74 0.05 78 / 0.6) 0%, transparent 62%);
+  background-size: 160px 160px, auto, auto;
+  background-blend-mode: soft-light, normal, normal;
+  box-shadow: inset 0 0 0 1px oklch(0.74 0.04 80 / 0.7), inset 0 3px 9px oklch(0.55 0.05 70 / 0.35);
+  overflow: hidden;
+}
+
+.board-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: 1px;
+  padding: 1px;
+}
+
+/* Kotak: cetakan tinta di atas kertas. */
+.sq {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: clamp(0.42rem, 1.02vw, 0.72rem);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px oklch(0.70 0.04 78 / 0.55);
+}
+
+.sq--ladder {
+  background: oklch(0.86 0.09 152 / 0.5);
+  box-shadow: inset 0 0 0 1px oklch(0.55 0.10 152 / 0.6);
+  color: oklch(0.36 0.09 152);
+}
+
+.sq--snake {
+  background: oklch(0.82 0.10 28 / 0.5);
+  box-shadow: inset 0 0 0 1px oklch(0.54 0.14 28 / 0.6);
+  color: oklch(0.38 0.13 28);
+}
+
+.sq--start {
+  background: oklch(0.88 0.07 84 / 0.6);
+  box-shadow: inset 0 0 0 2px oklch(0.60 0.09 70 / 0.75);
+}
+
+.sq--finish {
+  background: oklch(0.86 0.12 82 / 0.75);
+  box-shadow: inset 0 0 0 2px oklch(0.55 0.11 68 / 0.9);
+  color: oklch(0.32 0.07 60);
+}
+
+.sq__no {
+  position: relative;
+  z-index: 1;
+  line-height: 1;
+}
+
+.sq__mark {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 42%;
+  aspect-ratio: 1;
+  max-width: 15px;
+  opacity: 0.85;
+}
+
+.sq__mark svg { width: 100%; height: 100%; }
+
+/* Jalur ular & tangga digambar di atas cetakan. */
+.board-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.board-pieces {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ==========================================================================
+   Pion: cakram kayu yang dicat
+   ========================================================================== */
+
+.piece {
+  position: absolute;
+  width: 8.4%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--paint-red);
+  box-shadow:
+    inset 0 -3px 0 oklch(0.28 0.06 30 / 0.55),
+    inset 0 2px 0 oklch(0.92 0.05 70 / 0.4),
+    0 2px 5px oklch(0.14 0.03 45 / 0.5);
+  transform: translate(-50%, -50%);
+  transition: left 0.2s cubic-bezier(0.3, 1.2, 0.6, 1), top 0.2s cubic-bezier(0.3, 1.2, 0.6, 1);
+  will-change: left, top;
+}
+
+.piece svg { width: 58%; height: 58%; color: oklch(0.98 0.01 90 / 0.92); }
+
+.piece[data-color='p1'] { background: var(--paint-red); }
+.piece[data-color='p2'] { background: var(--paint-blue); }
+.piece[data-color='p3'] { background: var(--paint-green); }
+.piece[data-color='p4'] { background: oklch(0.62 0.12 300); }
+
+/* Pion yang sedang jalan: cincin putih + sedikit terangkat. */
+.piece.is-active {
+  z-index: 5;
+  box-shadow:
+    inset 0 -3px 0 oklch(0.28 0.06 30 / 0.55),
+    inset 0 2px 0 oklch(0.92 0.05 70 / 0.4),
+    0 0 0 2px var(--paper-100),
+    0 0 0 4px oklch(0.30 0.05 55),
+    0 5px 10px oklch(0.14 0.03 45 / 0.55);
+  animation: piece-bob 1.5s ease-in-out infinite;
+}
+
+@keyframes piece-bob {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -56%) scale(1.06); }
+}
+
+/* Saat melompat antar kotak. */
+.piece.is-hopping { z-index: 6; animation: piece-hop 0.24s ease-out; }
+
+@keyframes piece-hop {
+  0% { transform: translate(-50%, -50%) scale(1, 1); }
+  35% { transform: translate(-50%, -68%) scale(0.9, 1.16); }
+  100% { transform: translate(-50%, -50%) scale(1, 1); }
+}
+
+/* ==========================================================================
+   Papan skor: daftar tulis tangan di kertas
+   ========================================================================== */
+
+.score-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.score-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-chip);
+  background: var(--paper-200);
+  background-image: var(--noise);
+  background-size: 160px 160px;
+  background-blend-mode: soft-light;
+  color: var(--ink);
+  box-shadow: 2px 2px 0 oklch(0.18 0.03 46 / 0.35);
+}
+
+/* Baris pemain yang sedang jalan: ditandai pita kuning. */
+.score-item.is-turn {
+  box-shadow: 2px 2px 0 oklch(0.18 0.03 46 / 0.35), 0 0 0 3px var(--paint-yellow);
+}
+
+.score-item.is-won {
+  box-shadow: 2px 2px 0 oklch(0.18 0.03 46 / 0.35), 0 0 0 3px var(--ok);
+}
+
+.score-item__disc {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--paint-red);
+  box-shadow: inset 0 -2px 0 oklch(0.28 0.06 30 / 0.5);
+}
+
+.score-item__disc svg { width: 17px; height: 17px; color: oklch(0.98 0.01 90 / 0.92); }
+
+.score-item__disc[data-color='p1'] { background: var(--paint-red); }
+.score-item__disc[data-color='p2'] { background: var(--paint-blue); }
+.score-item__disc[data-color='p3'] { background: var(--paint-green); }
+.score-item__disc[data-color='p4'] { background: oklch(0.62 0.12 300); }
+
+.score-item__body { min-width: 0; }
+
+.score-item__who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tanda kecil "kamu" atau "AI". */
+.tag {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border-radius: var(--r-chip);
+  background: oklch(0.78 0.04 78);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Jalur kemajuan: garis tinta yang tumbuh. */
+.score-item__track {
+  height: 5px;
+  margin-top: 5px;
+  border-radius: var(--r-round);
+  background: oklch(0.80 0.04 80);
+  overflow: hidden;
+}
+
+.score-item__fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--paint-teal);
+  transition: width 0.35s ease;
+}
+
+.score-item__pos {
+  font-family: var(--font-mono);
+  font-size: 1.02rem;
+  font-weight: 700;
+  min-width: 2.3em;
+  text-align: right;
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   Dialog lanjutkan permainan
+   ========================================================================== */
+
+.resume-note {
+  margin-top: var(--s2);
+  padding: var(--s3);
+  border-radius: var(--r-chip);
+  background: oklch(0.86 0.05 82);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   Modal menang
+   ========================================================================== */
+
+.win-sheet { text-align: center; }
+
+.win-sheet__crest {
+  width: 74px;
+  height: 74px;
+  margin: 0 auto var(--s2);
+  color: oklch(0.68 0.15 68);
+  animation: crest-in 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@keyframes crest-in {
+  0% { transform: scale(0.5) rotate(-14deg); opacity: 0; }
+  60% { transform: scale(1.08) rotate(4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.win-sheet__title {
+  font-size: clamp(1.5rem, 5.4vw, 2.1rem);
+  margin-bottom: var(--s2);
+  color: oklch(0.40 0.12 55);
+}
+
+.win-sheet__text {
+  color: var(--ink-soft);
+  font-size: 1rem;
+}
+
+/* ==========================================================================
+   Responsif
+   ========================================================================== */
+
+@media (max-width: 1120px) {
+  .table {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'control score'
+      'board board';
+  }
+
+  .board-frame { width: min(100%, 660px); }
+}
+
+@media (max-width: 640px) {
+  .table {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'control'
+      'board'
+      'score';
+    padding: var(--s3);
+    gap: var(--s3);
+  }
+
+  .topbar { position: static; }
+
+  /* Bilah atas di layar sempit: sembunyikan nama, sisakan ikon dadu + label mode. */
+  .topbar__name { display: none; }
+  .topbar__die { width: 30px; height: 30px; }
+  .topbar__actions { gap: 6px; }
+  .icon-btn { width: 38px; height: 38px; }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  .board-frame { width: 100%; }
+
+  .dice-cube { width: 84px; height: 84px; padding: 11px; }
+
+  .turn { min-height: 66px; }
+
+  .turn__disc { width: 44px; height: 44px; }
+
+  .turn__disc svg { width: 22px; height: 22px; }
+
+  .turn__who { font-size: 1.08rem; }
+
+  .skill-card { width: 50px; height: 58px; }
+
+  .score-item__disc { width: 26px; height: 26px; }
+}
