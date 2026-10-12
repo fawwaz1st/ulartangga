@@ -6,6 +6,8 @@
 
 Permainan papan Ular Tangga yang berjalan langsung di browser. Papan 10×10 diacak ulang setiap permainan, ada lawan AI, sistem kartu skill, dan mode cepat. Tanpa framework, tanpa bundler, tanpa instalasi.
 
+**[Mainkan sekarang](https://fawwaz1st.github.io/ulartangga/)** (GitHub Pages).
+
 ---
 
 ## 🪵 Konsep desain
@@ -96,6 +98,10 @@ python -m http.server 8000
 │   │   ├── game.js         # Mesin permainan: papan, giliran, animasi, AI, simpanan
 │   │   └── menu.js         # Logika halaman menu
 │   └── images/
+│       ├── favicon.ico     # Dibuat oleh scripts/make-favicon.py
+│       └── favicon.svg
+├── scripts/
+│   └── make-favicon.py     # Gambar ulang favicon (PIL, 7 ukuran)
 ├── LICENSE
 └── README.md
 ```
